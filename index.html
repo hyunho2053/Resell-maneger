@@ -1013,17 +1013,21 @@
 
       svg.innerHTML = parts.join('');
     }
-          function renderInventorySummary(priceList) {
+              function renderInventorySummary(priceList) {
       const totalEl = document.getElementById('inventory-total-buy');
       const countEl = document.getElementById('inventory-count');
       if (!totalEl || !countEl) return;
 
-      const list = Array.isArray(priceList) ? priceList : [];
-      const totalBuy = list.reduce((sum, item) => sum + (Number(item.buy) || 0), 0);
+      const list = Array.isArray(priceList) ? priceList : loadData(STORAGE_KEYS.prices);
+      const totalBuy = list.reduce((sum, item) => {
+        const cleanBuy = Number(String(item.buy ?? 0).replace(/,/g, '')) || 0;
+        return sum + cleanBuy;
+      }, 0);
 
       totalEl.textContent = `${totalBuy.toLocaleString()}원`;
       countEl.textContent = `${list.length}개 품목`;
     }
+
   </script>
 </body>
 </html>
