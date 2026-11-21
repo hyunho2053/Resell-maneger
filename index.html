@@ -358,6 +358,13 @@
       </div>
 
       <p id="result"></p>
+      <div id="profit-chart-card" style="margin: 12px 0; padding: 14px; border: 1px solid #e5e8eb; border-radius: 14px; background: #ffffff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="font-size: 14px; color: #191f28;">수익 추이</strong>
+          <span id="profit-chart-range" style="font-size: 12px; color: #6b7684;"></span>
+        </div>
+        <svg id="profit-line-chart" viewBox="0 0 600 220" style="width: 100%; height: auto; display: block; overflow: visible;"></svg>
+      </div>
 
       <h4>총 순이익: <span id="total-profit">0</span>원</h4>
       <p class="helper">장부 항목을 누르면 내용을 바로 수정할 수 있어.</p>
@@ -617,6 +624,7 @@
 
       totalProfitEl.textContent = totalProfit.toLocaleString();
       totalProfitEl.className = totalProfit >= 0 ? 'plus' : 'minus';
+            renderProfitChart(logs);
     }
 
     function renderGuides() {
@@ -883,6 +891,119 @@
         }
       };
       reader.readAsText(file);
+    }
+  </script>
+    <script>
+    function renderProfitChart(logs) {
+      const svg = document.getElementById('profit-line-chart');
+      const rangeEl = document.getElementById('profit-chart-range');
+      if (!svg) return;
+
+      const list = Array.isArray(logs) ? logs : [];
+      if (list.length === 0) {
+        svg.innerHTML = `<text x="300" y="110" text-anchor="middle" fill="#8b95a1" font-size="13">표시할 수익 데이터가 없어</text>`;
+        if (rangeEl) rangeEl.textContent = '';
+        return;
+      }
+
+      const byDate = new Map();
+      list.forEach((item) => {
+        const rawDate = String(item.date || '').trim();
+        if (!rawDate) return;
+        const profit = Number(item.netProfit ?? item.profit ?? 0) || 0;
+        byDate.set(rawDate, (byDate.get(rawDate) || 0) + profit);
+      });
+
+      const points = Array.from(byDate.entries())
+        .map(([date, value]) => ({
+          date,
+          value,
+          ts: Date.parse(date) || 0
+        }))
+        .sort((a, b) => a.ts - b.ts || a.date.localeCompare(b.date));
+
+      if (points.length === 0) {
+        svg.innerHTML = `<text x="300" y="110" text-anchor="middle" fill="#8b95a1" font-size="13">날짜 데이터가 없어</text>`;
+        return;
+      }
+
+      if (rangeEl) {
+        rangeEl.textContent = `${points[0].date} ~ ${points[points.length - 1].date}`;
+      }
+
+      const width = 600;
+      const height = 220;
+      const pad = { top: 18, right: 20, bottom: 34, left: 64 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      const vals = points.map((p) => p.value);
+      let minVal = Math.min(0, ...vals);
+      let maxVal = Math.max(0, ...vals);
+
+      if (minVal === maxVal) {
+        maxVal = 10000;
+        minVal = 0;
+      } else {
+        const span = maxVal - minVal;
+        const margin = span * 0.15;
+        if (minVal < 0) minVal = Math.floor((minVal - margin) / 1000) * 1000;
+        else minVal = 0;
+        maxVal = Math.ceil((maxVal + margin) / 1000) * 1000;
+      }
+
+      const yTicks = 4;
+      const xAt = (idx) => {
+        if (points.length === 1) return pad.left + plotW / 2;
+        return pad.left + (idx / (points.length - 1)) * plotW;
+      };
+      const yAt = (val) => {
+        const ratio = (val - minVal) / (maxVal - minVal || 1);
+        return pad.top + plotH - ratio * plotH;
+      };
+
+      let parts = [];
+
+      for (let i = 0; i <= yTicks; i++) {
+        const tickVal = minVal + ((maxVal - minVal) / yTicks) * i;
+        const y = yAt(tickVal);
+        const isZero = Math.abs(tickVal) < 1e-6;
+        parts.push(
+          `<line x1="${pad.left}" y1="${y}" x2="${width - pad.right}" y2="${y}" stroke="${isZero ? '#9aa5b1' : '#eef1f4'}" stroke-width="${isZero ? '1.3' : '1'}" stroke-dasharray="${isZero ? '4,3' : 'none'}" />`
+        );
+        parts.push(
+          `<text x="${pad.left - 8}" y="${y + 4}" text-anchor="end" fill="#6b7684" font-size="11">${Math.round(tickVal).toLocaleString()}원</text>`
+        );
+      }
+
+      const labelStep = Math.max(1, Math.ceil(points.length / 5));
+      points.forEach((pt, idx) => {
+        if (idx % labelStep === 0 || idx === points.length - 1) {
+          const x = xAt(idx);
+          const shortDate = pt.date.slice(5) || pt.date;
+          parts.push(
+            `<text x="${x}" y="${height - 10}" text-anchor="middle" fill="#6b7684" font-size="11">${shortDate}</text>`
+          );
+        }
+      });
+
+      const coords = points.map((pt, idx) => `${xAt(idx)},${yAt(pt.value)}`);
+      if (coords.length > 1) {
+        parts.push(
+          `<polyline fill="none" stroke="#3182f6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${coords.join(' ')}" />`
+        );
+      }
+
+      points.forEach((pt, idx) => {
+        const cx = xAt(idx);
+        const cy = yAt(pt.value);
+        const dotColor = pt.value >= 0 ? '#3182f6' : '#e5484d';
+        parts.push(
+          `<circle cx="${cx}" cy="${cy}" r="4" fill="#ffffff" stroke="${dotColor}" stroke-width="2.2"><title>${pt.date}: ${pt.value.toLocaleString()}원</title></circle>`
+        );
+      });
+
+      svg.innerHTML = parts.join('');
     }
   </script>
 </body>
