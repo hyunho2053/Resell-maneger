@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>resell maneger</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", sans-serif;
+      background-color: #f5f6f8;
+      color: #191f28;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 20;
+    }
+
+    .hamburger-btn {
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border-radius: 10px;
+      background-color: #ffffff;
+      color: #191f28;
+      border: 1px solid #d9dfe6;
+    }
+
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #4e5968;
+    }
+
+    .drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.35);
+      z-index: 90;
+    }
+
+    .drawer-backdrop.open {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 25vw;
+      min-width: 150px;
+      max-width: 240px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background-color: #ffffff;
+      border-right: 1px solid #e5e8eb;
+      padding: 16px 10px;
+      transform: translateX(-100%);
+      transition: transform 0.22s ease;
+      z-index: 100;
+      box-shadow: 4px 0 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      font-size: 12px;
+      font-weight: 700;
+      color: #8b95a1;
+      padding: 4px 6px 8px;
+      border-bottom: 1px solid #f2f4f6;
+      margin-bottom: 4px;
+    }
+
+    .drawer-btn {
+      width: 100%;
+      text-align: left;
+      padding: 11px 10px;
+      border-radius: 10px;
+      background-color: #f9fafb;
+      color: #191f28;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .drawer-btn.active {
+      background-color: #191f28;
+      color: #ffffff;
+    }
+
+    .lobby-card {
+      background-color: #ffffff;
+      border: 1px solid #e5e8eb;
+      border-radius: 18px;
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .lobby-title {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      color: #191f28;
+    }
+
+    .lobby-sub {
+      margin: 10px 0 0;
+      font-size: 13px;
+      color: #6b7684;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    h4 {
+      margin: 14px 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .card {
+      background-color: #ffffff;
+      border: 1px solid #e5e8eb;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid #d1d6db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background-color: #ffffff;
+      color: #191f28;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    button {
+      padding: 9px 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background-color: #3182f6;
+      color: #ffffff;
+    }
+
+    button.secondary {
+      background-color: #e5e8eb;
+      color: #333d4b;
+    }
+
+    button.del-btn {
+      background-color: #fff0f0;
+      color: #d63031;
+      padding: 6px 10px;
+      flex-shrink: 0;
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .filter-btn {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+      background-color: #f2f4f6;
+      color: #4e5968;
+    }
+
+    .filter-btn.active {
+      background-color: #191f28;
+      color: #ffffff;
+    }
+
+    .helper {
+      margin: 10px 0 6px;
+      font-size: 12px;
+      color: #6b7684;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 4px;
+      border-bottom: 1px solid #eef0f3;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .item-main {
+      flex: 1;
+      cursor: pointer;
+      line-height: 1.45;
+    }
+
+    .item-sub {
+      font-size: 13px;
+      color: #4e5968;
+    }
+
+    .item-sn {
+      font-size: 12px;
+      color: #8b95a1;
+    }
+
+    .plus {
+      color: #1b64da;
+      font-weight: 600;
+    }
+
+    .minus {
+      color: #d63031;
+      font-weight: 600;
+    }
+
+    #result {
+      margin: 10px 0 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div id="drawer-backdrop" class="drawer-backdrop"></div>
+
+  <nav id="nav-drawer" class="drawer">
+    <div class="drawer-header">MENU</div>
+    <button class="drawer-btn active" data-target="lobby-box" data-label="홈">홈</button>
+    <button class="drawer-btn" data-target="price-box" data-label="시세표">시세표</button>
+    <button class="drawer-btn" data-target="profit-box" data-label="현재 수익">현재 수익</button>
+    <button class="drawer-btn" data-target="guide-box" data-label="명품 감정법">명품 감정법</button>
+  </nav>
+
+  <div class="app">
+    <div class="topbar">
+      <button id="menu-toggle" class="hamburger-btn" aria-label="메뉴 열기">☰</button>
+      <span id="current-page-label" class="topbar-title">홈</span>
+      <span style="width: 42px;"></span>
+    </div>
+
+    <!-- 홈 화면 -->
+    <div id="lobby-box" class="lobby-card">
+      <h1 class="lobby-title">resell maneger</h1>
+      <p class="lobby-sub">시세 차익의 현금화</p>
+    </div>
+
+    <!-- 시세표 -->
+    <div id="price-box" class="card" style="display: none;">
+      <h3>시세표</h3>
+
+      <select id="price-category">
+        <option value="에어팟">에어팟</option>
+        <option value="애플워치">애플워치</option>
+        <option value="아이폰">아이폰</option>
+        <option value="명품잡화">명품잡화</option>
+      </select>
+
+      <input id="price-item-name" type="text" placeholder="품목명 (예: 에어팟 프로 3)" />
+      <input id="price-buy" type="number" placeholder="매입가 (원)" />
+      <input id="price-sell" type="number" placeholder="판매가 (원)" />
+      <input id="price-serial" type="text" placeholder="시리얼넘버 (S/N)" />
+
+      <div class="btn-row">
+        <button id="price-save-btn">시세 추가</button>
+        <button id="price-cancel-btn" class="secondary" style="display: none;">취소</button>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" data-cat="전체">전체</button>
+        <button class="filter-btn" data-cat="에어팟">에어팟</button>
+        <button class="filter-btn" data-cat="애플워치">애플워치</button>
+        <button class="filter-btn" data-cat="아이폰">아이폰</button>
+        <button class="filter-btn" data-cat="명품잡화">명품잡화</button>
+      </div>
+
+      <p class="helper">항목을 누르면 시세와 정보를 바로 수정할 수 있어.</p>
+      <div id="price-list"></div>
+    </div>
+
+    <!-- 현재 수익 -->
+    <div id="profit-box" class="card" style="display: none;">
+      <h3>수익 계산기</h3>
+
+      <input id="trade-date" type="date" />
+      <input id="item-name" type="text" placeholder="품목명 (예: 에어팟 프로 3)" />
+      <input id="buy" type="number" placeholder="구매가" />
+      <input id="sell" type="number" placeholder="판매가" />
+      <input id="fee" type="number" placeholder="수수료" />
+      <input id="ship" type="number" placeholder="배송비" />
+
+      <div class="btn-row">
+        <button id="calc-btn" class="secondary">계산하기</button>
+        <button id="add-btn">장부에 추가</button>
+        <button id="log-cancel-btn" class="secondary" style="display: none;">취소</button>
+      </div>
+
+      <p id="result"></p>
+
+      <h4>총 순이익: <span id="total-profit">0</span>원</h4>
+      <p class="helper">장부 항목을 누르면 내용을 바로 수정할 수 있어.</p>
+      <div id="log-list"></div>
+    </div>
+
+    <!-- 명품 감정법 -->
+    <div id="guide-box" class="card" style="display: none;">
+      <h3>명품 감정법</h3>
+
+      <input id="guide-title" type="text" placeholder="브랜드 / 품목 (예: 톰브라운)" />
+      <textarea id="guide-memo" placeholder="감정 포인트 메모 (박음질, 각인, 택, 밑창 등)"></textarea>
+
+      <div class="btn-row">
+        <button id="guide-save-btn">메모 추가</button>
+        <button id="guide-cancel-btn" class="secondary" style="display: none;">취소</button>
+      </div>
+
+      <p class="helper">메모를 누르면 바로 수정할 수 있어.</p>
+      <div id="guide-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      prices: 'resell_manager_prices_v1',
+      logs: 'resell_manager_logs_v1',
+      guides: 'resell_manager_guides_v1'
+    };
+
+    function loadData(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveData(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        // 저장 공간 제한 시 무시
+      }
+    }
+
+    const menuToggleBtn = document.getElementById('menu-toggle');
+    const navDrawer = document.getElementById('nav-drawer');
+    const drawerBackdrop = document.getElementById('drawer-backdrop');
+    const currentPageLabel = document.getElementById('current-page-label');
+    const drawerButtons = document.querySelectorAll('.drawer-btn');
+
+    const boxes = {
+      'lobby-box': document.getElementById('lobby-box'),
+      'price-box': document.getElementById('price-box'),
+      'profit-box': document.getElementById('profit-box'),
+      'guide-box': document.getElementById('guide-box')
+    };
+
+    // 시세표
+    const priceCategoryInput = document.getElementById('price-category');
+    const priceNameInput = document.getElementById('price-item-name');
+    const priceBuyInput = document.getElementById('price-buy');
+    const priceSellInput = document.getElementById('price-sell');
+    const priceSerialInput = document.getElementById('price-serial');
+    const priceSaveBtn = document.getElementById('price-save-btn');
+    const priceCancelBtn = document.getElementById('price-cancel-btn');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const priceListEl = document.getElementById('price-list');
+
+    let prices = loadData(STORAGE_KEYS.prices);
+    let editingPriceIndex = null;
+    let currentFilter = '전체';
+
+    // 수익 장부
+    const dateInput = document.getElementById('trade-date');
+    const itemNameInput = document.getElementById('item-name');
+    const buyInput = document.getElementById('buy');
+    const sellInput = document.getElementById('sell');
+    const feeInput = document.getElementById('fee');
+    const shipInput = document.getElementById('ship');
+    const calcBtn = document.getElementById('calc-btn');
+    const addBtn = document.getElementById('add-btn');
+    const logCancelBtn = document.getElementById('log-cancel-btn');
+    const resultText = document.getElementById('result');
+    const logList = document.getElementById('log-list');
+    const totalProfitEl = document.getElementById('total-profit');
+
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+
+    let logs = loadData(STORAGE_KEYS.logs);
+    let editingLogIndex = null;
+
+    // 명품 감정법
+    const guideTitleInput = document.getElementById('guide-title');
+    const guideMemoInput = document.getElementById('guide-memo');
+    const guideSaveBtn = document.getElementById('guide-save-btn');
+    const guideCancelBtn = document.getElementById('guide-cancel-btn');
+    const guideListEl = document.getElementById('guide-list');
+
+    let guides = loadData(STORAGE_KEYS.guides);
+    let editingGuideIndex = null;
+
+    function openDrawer() {
+      navDrawer.classList.add('open');
+      drawerBackdrop.classList.add('open');
+    }
+
+    function closeDrawer() {
+      navDrawer.classList.remove('open');
+      drawerBackdrop.classList.remove('open');
+    }
+
+    function resetPriceForm() {
+      priceCategoryInput.value = '에어팟';
+      priceNameInput.value = '';
+      priceBuyInput.value = '';
+      priceSellInput.value = '';
+      priceSerialInput.value = '';
+      editingPriceIndex = null;
+      priceSaveBtn.textContent = '시세 추가';
+      priceCancelBtn.style.display = 'none';
+    }
+
+    function resetLogForm() {
+      dateInput.value = today;
+      itemNameInput.value = '';
+      buyInput.value = '';
+      sellInput.value = '';
+      feeInput.value = '';
+      shipInput.value = '';
+      editingLogIndex = null;
+      addBtn.textContent = '장부에 추가';
+      logCancelBtn.style.display = 'none';
+    }
+
+    function resetGuideForm() {
+      guideTitleInput.value = '';
+      guideMemoInput.value = '';
+      editingGuideIndex = null;
+      guideSaveBtn.textContent = '메모 추가';
+      guideCancelBtn.style.display = 'none';
+    }
+
+    function calculateProfitValues() {
+      const buy = Number(buyInput.value) || 0;
+      const sell = Number(sellInput.value) || 0;
+      const fee = Number(feeInput.value) || 0;
+      const ship = Number(shipInput.value) || 0;
+
+      const netProfit = sell - buy - fee - ship;
+      const margin = sell > 0 ? ((netProfit / sell) * 100).toFixed(1) : 0;
+
+      return { buy, sell, fee, ship, netProfit, margin };
+    }
+
+    function renderPrices() {
+      priceListEl.innerHTML = '';
+
+      const filtered = prices
+        .map((item, realIndex) => ({ item, realIndex }))
+        .filter(({ item }) => currentFilter === '전체' || item.category === currentFilter);
+
+      filtered.forEach(({ item, realIndex }, idx) => {
+        const diff = item.sell - item.buy;
+        const diffClass = diff >= 0 ? 'plus' : 'minus';
+        const diffSign = diff > 0 ? '+' : '';
+
+        const row = document.createElement('div');
+        row.className = 'list-item';
+
+        const textSpan = document.createElement('div');
+        textSpan.className = 'item-main';
+        textSpan.innerHTML =
+          `<div><strong>${idx + 1}. [${item.category}] ${item.name}</strong></div>` +
+          `<div class="item-sub">매입 ${item.buy.toLocaleString()}원 · 판매 ${item.sell.toLocaleString()}원 (<span class="${diffClass}">${diffSign}${diff.toLocaleString()}원</span>)</div>` +
+          `<div class="item-sn">S/N: ${item.serial || '-'}</div>`;
+
+        textSpan.addEventListener('click', () => {
+          editingPriceIndex = realIndex;
+          priceCategoryInput.value = item.category;
+          priceNameInput.value = item.name;
+          priceBuyInput.value = item.buy;
+          priceSellInput.value = item.sell;
+          priceSerialInput.value = item.serial;
+          priceSaveBtn.textContent = '수정 완료';
+          priceCancelBtn.style.display = 'inline-block';
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'X';
+        delBtn.className = 'del-btn';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          prices.splice(realIndex, 1);
+          saveData(STORAGE_KEYS.prices, prices);
+          if (editingPriceIndex === realIndex) {
+            resetPriceForm();
+          }
+          renderPrices();
+        });
+
+        row.appendChild(textSpan);
+        row.appendChild(delBtn);
+        priceListEl.appendChild(row);
+      });
+    }
+
+    function renderLogs() {
+      logList.innerHTML = '';
+      let totalProfit = 0;
+
+      logs.forEach((item, index) => {
+        totalProfit += item.netProfit;
+        const profitClass = item.netProfit >= 0 ? 'plus' : 'minus';
+
+        const row = document.createElement('div');
+        row.className = 'list-item';
+
+        const textSpan = document.createElement('div');
+        textSpan.className = 'item-main';
+        textSpan.innerHTML =
+          `<div><strong>${index + 1}. ${item.name}</strong> <span class="item-sn">[${item.date}]</span></div>` +
+          `<div class="item-sub">순이익: <span class="${profitClass}">${item.netProfit.toLocaleString()}원</span> (${item.margin}%)</div>`;
+
+        textSpan.addEventListener('click', () => {
+          editingLogIndex = index;
+          dateInput.value = item.date || today;
+          itemNameInput.value = item.name;
+          buyInput.value = item.buy ?? '';
+          sellInput.value = item.sell ?? '';
+          feeInput.value = item.fee ?? '';
+          shipInput.value = item.ship ?? '';
+          addBtn.textContent = '수정 완료';
+          logCancelBtn.style.display = 'inline-block';
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'X';
+        delBtn.className = 'del-btn';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          logs.splice(index, 1);
+          saveData(STORAGE_KEYS.logs, logs);
+          if (editingLogIndex === index) {
+            resetLogForm();
+          }
+          renderLogs();
+        });
+
+        row.appendChild(textSpan);
+        row.appendChild(delBtn);
+        logList.appendChild(row);
+      });
+
+      totalProfitEl.textContent = totalProfit.toLocaleString();
+      totalProfitEl.className = totalProfit >= 0 ? 'plus' : 'minus';
+    }
+
+    function renderGuides() {
+      guideListEl.innerHTML = '';
+
+      guides.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        row.style.alignItems = 'flex-start';
+
+        const textSpan = document.createElement('div');
+        textSpan.className = 'item-main';
+        textSpan.style.whiteSpace = 'pre-line';
+        textSpan.innerHTML =
+          `<div><strong>${index + 1}. ${item.title}</strong></div>` +
+          `<div class="item-sub">${item.memo}</div>`;
+
+        textSpan.addEventListener('click', () => {
+          editingGuideIndex = index;
+          guideTitleInput.value = item.title;
+          guideMemoInput.value = item.memo;
+          guideSaveBtn.textContent = '수정 완료';
+          guideCancelBtn.style.display = 'inline-block';
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'X';
+        delBtn.className = 'del-btn';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          guides.splice(index, 1);
+          saveData(STORAGE_KEYS.guides, guides);
+          if (editingGuideIndex === index) {
+            resetGuideForm();
+          }
+          renderGuides();
+        });
+
+        row.appendChild(textSpan);
+        row.appendChild(delBtn);
+        guideListEl.appendChild(row);
+      });
+    }
+
+    menuToggleBtn.addEventListener('click', () => {
+      if (navDrawer.classList.contains('open')) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+    });
+
+    drawerBackdrop.addEventListener('click', () => {
+      closeDrawer();
+    });
+
+    drawerButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        drawerButtons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        Object.values(boxes).forEach((box) => {
+          box.style.display = 'none';
+        });
+
+        const targetId = btn.dataset.target;
+        if (boxes[targetId]) {
+          boxes[targetId].style.display = targetId === 'lobby-box' ? 'flex' : 'block';
+        }
+
+        currentPageLabel.textContent = btn.dataset.label;
+        closeDrawer();
+      });
+    });
+
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.cat;
+        renderPrices();
+      });
+    });
+
+    priceSaveBtn.addEventListener('click', () => {
+      const category = priceCategoryInput.value;
+      const name = priceNameInput.value.trim() || '미입력 품목';
+      const buy = Number(priceBuyInput.value) || 0;
+      const sell = Number(priceSellInput.value) || 0;
+      const serial = priceSerialInput.value.trim();
+
+      const newItem = { category, name, buy, sell, serial };
+
+      if (editingPriceIndex !== null) {
+        prices[editingPriceIndex] = newItem;
+      } else {
+        prices.push(newItem);
+      }
+
+      saveData(STORAGE_KEYS.prices, prices);
+      resetPriceForm();
+      renderPrices();
+    });
+
+    priceCancelBtn.addEventListener('click', () => {
+      resetPriceForm();
+    });
+
+    calcBtn.addEventListener('click', () => {
+      const { netProfit, margin } = calculateProfitValues();
+      resultText.textContent = `순이익: ${netProfit.toLocaleString()}원 / 마진율: ${margin}%`;
+      resultText.className = netProfit >= 0 ? 'plus' : 'minus';
+    });
+
+    addBtn.addEventListener('click', () => {
+      const date = dateInput.value || today;
+      const name = itemNameInput.value.trim() || '미입력 품목';
+      const { buy, sell, fee, ship, netProfit, margin } = calculateProfitValues();
+
+      const newLog = {
+        date,
+        name,
+        buy,
+        sell,
+        fee,
+        ship,
+        netProfit,
+        margin
+      };
+
+      if (editingLogIndex !== null) {
+        logs[editingLogIndex] = newLog;
+      } else {
+        logs.push(newLog);
+      }
+
+      saveData(STORAGE_KEYS.logs, logs);
+      resetLogForm();
+      renderLogs();
+    });
+
+    logCancelBtn.addEventListener('click', () => {
+      resetLogForm();
+    });
+
+    guideSaveBtn.addEventListener('click', () => {
+      const title = guideTitleInput.value.trim() || '제목 없음';
+      const memo = guideMemoInput.value.trim() || '내용 없음';
+
+      if (editingGuideIndex !== null) {
+        guides[editingGuideIndex] = { title, memo };
+      } else {
+        guides.push({ title, memo });
+      }
+
+      saveData(STORAGE_KEYS.guides, guides);
+      resetGuideForm();
+      renderGuides();
+    });
+
+    guideCancelBtn.addEventListener('click', () => {
+      resetGuideForm();
+    });
+
+    renderPrices();
+    renderLogs();
+    renderGuides();
+  </script>
+</body>
+</html>
