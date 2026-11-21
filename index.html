@@ -365,6 +365,13 @@
         </div>
         <svg id="profit-line-chart" viewBox="0 0 600 220" style="width: 100%; height: auto; display: block; overflow: visible;"></svg>
       </div>
+      <div id="inventory-summary-card" style="margin: 10px 0 12px; padding: 12px 14px; border: 1px solid #e5e8eb; border-radius: 14px; background: #ffffff; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 12px; color: #6b7684;">보유 재고 (매입 기준)</div>
+          <div id="inventory-count" style="font-size: 12px; color: #8b95a1; margin-top: 2px;">0개 품목</div>
+        </div>
+        <strong id="inventory-total-buy" style="font-size: 16px; color: #191f28;">0원</strong>
+      </div>
 
       <h4>총 순이익: <span id="total-profit">0</span>원</h4>
       <p class="helper">장부 항목을 누르면 내용을 바로 수정할 수 있어.</p>
@@ -573,6 +580,7 @@
         row.appendChild(delBtn);
         priceListEl.appendChild(row);
       });
+            renderInventorySummary(prices);
     }
 
     function renderLogs() {
@@ -1004,6 +1012,17 @@
       });
 
       svg.innerHTML = parts.join('');
+    }
+          function renderInventorySummary(priceList) {
+      const totalEl = document.getElementById('inventory-total-buy');
+      const countEl = document.getElementById('inventory-count');
+      if (!totalEl || !countEl) return;
+
+      const list = Array.isArray(priceList) ? priceList : [];
+      const totalBuy = list.reduce((sum, item) => sum + (Number(item.buy) || 0), 0);
+
+      totalEl.textContent = `${totalBuy.toLocaleString()}원`;
+      countEl.textContent = `${list.length}개 품목`;
     }
   </script>
 </body>
