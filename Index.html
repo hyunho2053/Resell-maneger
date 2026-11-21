@@ -787,15 +787,16 @@
   </script>
 
   <!-- 데이터 백업 및 복원 플로팅 바 -->
-  <div id="backup-bar" style="position:fixed; right:14px; bottom:18px; z-index:9999; display:flex; gap:8px;">
-    <button type="button" onclick="exportBackupData()" style="padding:10px 14px; border:none; border-radius:999px; background:#191f28; color:#fff; font-size:13px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.18); cursor:pointer;">
-      백업 저장
-    </button>
-    <button type="button" onclick="document.getElementById('backup-file-input').click()" style="padding:10px 14px; border:1px solid #d1d6db; border-radius:999px; background:#ffffff; color:#191f28; font-size:13px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.12); cursor:pointer;">
-      백업 불러오기
-    </button>
-    <input id="backup-file-input" type="file" accept=".json,application/json" style="display:none;" onchange="importBackupData(event)" />
-  </div>
+<div id="backup-bar" style="position:fixed; right:14px; bottom:18px; z-index:9999; display:flex; gap:8px;">
+  <button type="button" onclick="exportBackupData()" style="padding:10px 14px; border:none; border-radius:999px; background:#191f28; color:#fff; font-size:13px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.18); cursor:pointer;">
+    백업 저장
+  </button>
+  <label for="backup-file-input" style="padding:10px 14px; border:1px solid #d1d6db; border-radius:999px; background:#ffffff; color:#191f28; font-size:13px; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,0.12); cursor:pointer; display:inline-flex; align-items:center;">
+    백업 불러오기
+  </label>
+  <input id="backup-file-input" type="file" accept="*/*" style="position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; pointer-events:none;" onchange="importBackupData(event)" />
+</div>
+
 
   <script>
     const BACKUP_TARGET_KEYS = [
